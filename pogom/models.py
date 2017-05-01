@@ -2770,7 +2770,7 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
 
                 with Gym.database().execution_context():
                     Query = Gym.select().where(Gym.gym_id == f.id).dicts()
-                    park_id = None
+                    park_id = 0
                     for gym in list(Query):
                         park_id = gym['park']
                     log.debug(park_id)
@@ -3292,7 +3292,7 @@ def parse_gyms(args, gym_responses, wh_update_queue, db_update_queue):
 
         with Gym.database().execution_context():
             Query = Gym.select().where(Gym.gym_id == gym_id).dicts()
-            park_id = None
+            park_id = 0
             for gym in list(Query):
                 park_id = gym['park']
             log.debug(park_id)
