@@ -319,9 +319,13 @@ def get_args():
                         action='store_true', default=False)
     parser.add_argument('-ss', '--spawnpoint-scanning',
                         help=('Use spawnpoint scanning (instead of hex ' +
-                              'grid or speed scan). Scans in a circle based ' +
-                              'on step_limit when on DB.'),
-                        nargs='?', const='nofile', default=False)
+                              'grid). Scans in a circle based on step_limit ' +
+                              'when on DB.'),
+                        action='store_true', default=False)
+    parser.add_argument('-ssct', '--ss-cluster-time',
+                        help=('Time threshold in seconds for spawn point ' +
+                              'clustering (0 to disable).'),
+                        type=int, default=0)
     parser.add_argument('-fs', '--fort-scanning',
                         help=('Use fort scanning (instead of hex ' +
                               'grid or speed scan). Scans in a circle based ' +
@@ -329,7 +333,7 @@ def get_args():
                               'forts, which are retrieved from DB or file ' +
                               'if added as argument. Best used with -np to ' +
                               'increase cell size.'),
-                        nargs='?', const='nofile', default=False)
+                        action='store_true', default=False)
     parser.add_argument('-speed', '--speed-scan',
                         help=('Use speed scanning to identify spawn points ' +
                               'and then scan closest spawns.'),
@@ -342,28 +346,17 @@ def get_args():
                         type=int, default=20)
     parser.add_argument('-kph', '--kph',
                         help=('Set a maximum speed in km/hour for scanner ' +
-                              'movement.'),
+                              'movement. 0 to disable. Default: 35.'),
                         type=int, default=35)
     parser.add_argument('-hkph', '--hlvl-kph',
                         help=('Set a maximum speed in km/hour for scanner ' +
-                              'movement, for high-level (L30) accounts.'),
+                              'movement, for high-level (L30) accounts. ' +
+                              '0 to disable. Default: 25.'),
                         type=int, default=25)
     parser.add_argument('-ldur', '--lure-duration',
                         help=('Change duration for lures set on pokestops. ' +
                               'This is useful for events that extend lure ' +
                               'duration.'), type=int, default=30)
-    parser.add_argument('--dump-spawnpoints',
-                        help=('Dump the spawnpoints from the db to json ' +
-                              '(only for use with -ss and file).'),
-                        action='store_true', default=False)
-    parser.add_argument('--dump-gyms',
-                        help=('Dump the gyms from the db to json ' +
-                              '(only for use with -fs and file).'),
-                        action='store_true', default=False)
-    parser.add_argument('--dump-pokestops',
-                        help=('Dump the pokestops from the db to json ' +
-                              '(only for use with -fs and file).'),
-                        action='store_true', default=False)
     parser.add_argument('-pd', '--purge-data',
                         help=('Clear Pokemon from database this many hours ' +
                               'after they disappear (0 to disable).'),

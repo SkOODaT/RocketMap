@@ -7,7 +7,6 @@ import logging
 import time
 import re
 import ssl
-import json
 import requests
 
 from distutils.version import StrictVersion
@@ -27,9 +26,8 @@ from pogom.utils import (get_args, now, gmaps_reverse_geolocate,
 from pogom.altitude import get_gmaps_altitude
 
 from pogom.models import (init_database, create_tables, drop_tables,
-                          PlayerLocale, SpawnPoint, db_updater, clean_db_loop,
-                          verify_table_encoding, verify_database_schema,
-                          Gym, Pokestop)
+                          PlayerLocale, db_updater, clean_db_loop,
+                          verify_table_encoding, verify_database_schema)
 from pogom.webhook import wh_updater
 
 from pogom.osm import exgyms
@@ -306,9 +304,9 @@ def main():
     # Stop if we're just looking for a debug dump.
     if args.dump:
         log.info('Retrieving environment info...')
-        hastebin = get_debug_dump_link()
+        hastebin_id  = get_debug_dump_link()
         log.info('Done! Your debug link: https://hastebin.com/%s.txt',
-                 hastebin)
+                 hastebin_id )
         sys.exit(1)
 
     args.root_path = os.path.dirname(os.path.abspath(__file__))
@@ -348,7 +346,7 @@ def main():
     (altitude, status) = get_gmaps_altitude(position[0], position[1],
                                             args.gmaps_key)
     if altitude is not None:
-        log.debug('Local altitude is: %sm', altitude)
+        log.debug('Local altitude is: %sm.', altitude)
         position = (position[0], position[1], altitude)
     else:
         if status == 'REQUEST_DENIED':
@@ -364,14 +362,15 @@ def main():
     log.info('Parsed location is: %.4f/%.4f/%.4f (lat/lng/alt)',
              position[0], position[1], position[2])
 
-    if args.no_pokemon:
-        log.info('Parsing of Pokemon disabled.')
-    if args.no_pokestops:
-        log.info('Parsing of Pokestops disabled.')
-    if args.no_gyms:
-        log.info('Parsing of Gyms disabled.')
-    if args.encounter:
-        log.info('Encountering pokemon enabled.')
+    # Scanning toggles.
+    log.info('Parsing of Pokemon %s.',
+             'disabled' if args.no_pokemon else 'enabled')
+    log.info('Parsing of Pokestops %s.',
+             'disabled' if args.no_pokestops else 'enabled')
+    log.info('Parsing of Gyms %s.',
+             'disabled' if args.no_gyms else 'enabled')
+    log.info('Pokemon encounters %s.',
+             'enabled' if args.encounter else 'disabled')
 
     app = None
     if not args.no_server and not args.clear_db:
@@ -428,7 +427,7 @@ def main():
     wh_updates_queue = Queue()
     wh_key_cache = {}
 
-    if len(args.wh_types) == 0:
+    if not args.wh_types:
         log.info('Webhook disabled.')
     else:
         log.info('Webhook enabled for events: sending %s to %s.',
@@ -444,6 +443,14 @@ def main():
             t.start()
 
     if not args.only_server:
+        # Speed limit.
+        log.info('Scanning speed limit %s.',
+                 'set to {} km/h'.format(args.kph)
+                 if args.kph > 0 else 'disabled')
+        log.info('High-level speed limit %s.',
+                 'set to {} km/h'.format(args.hlvl_kph)
+                 if args.hlvl_kph > 0 else 'disabled')
+
         # Check if we are able to scan.
         if not can_start_scanning(args):
             sys.exit(1)
@@ -467,45 +474,6 @@ def main():
         else:
             log.debug(
                 'Existing player locale has been retrieved from the DB.')
-
-        # Gather the Pokemon!
-
-        # Attempt to dump the DB data (do this before starting threads of
-        # endure the woe).
-        if (args.spawnpoint_scanning and
-                args.spawnpoint_scanning != 'nofile' and
-                args.dump_spawnpoints):
-            with open(args.spawnpoint_scanning, 'w+') as file:
-                log.info(
-                    'Saving spawn points to %s', args.spawnpoint_scanning)
-                spawns = SpawnPoint.get_spawnpoints_in_hex(
-                    position, args.step_limit)
-                file.write(json.dumps(
-                    spawns, sort_keys=True, indent=4, separators=(',', ': ')))
-                log.info('Finished exporting spawn points')
-
-        if args.fort_scanning:
-            if args.fort_scanning != 'nofile':
-                if args.dump_gyms:
-                    with open(args.fort_scanning, 'w+') as file:
-                        log.info('Saving gyms to %s', args.fort_scanning)
-                        gyms = Gym.get_gyms_in_hex(
-                            position, args.step_limit)
-                        file.write(json.dumps(
-                            gyms, sort_keys=True, indent=4,
-                            separators=(',', ': ')))
-                        log.info('Finished exporting gyms')
-                if args.dump_pokestops:
-                    with open(args.fort_scanning, 'w+') as file:
-                        log.info('Saving pokestops to %s', args.fort_scanning)
-                        pokestops = Pokestop.get_stops_in_hex(
-                            position, args.step_limit)
-                        file.write(json.dumps(
-                            pokestops, sort_keys=True, indent=4,
-                            separators=(',', ': ')))
-                        log.info('Finished exporting Pokestops')
-            else:
-                log.warning('Output file must be provided for a dump.')
 
         # Set To True For Fake Spawn Test Mode #
         fake_pokemon_mode = False
