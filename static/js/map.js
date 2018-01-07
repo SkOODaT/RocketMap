@@ -619,7 +619,7 @@ function getshortDateStr(t) {
 }
 
 function scout(encounterId) { // eslint-disable-line no-unused-vars
-    var infoEl = $('#scoutInfo' + atob(encounterId))
+    var infoEl = $('#scoutInfo' + encounterId)
 
     $.ajax({
         url: 'scout',
@@ -716,7 +716,7 @@ function pokemonLabel(pokemon) {
     var time_id = pokemon.time_id
     var costume_id = pokemon.costume_id
     var spawnpoint_id = pokemon.spawnpoint_id
-    var encounterIdLong = atob(encounterId)
+    var encounterIdLong = encounterId
 
     var pokemon_icon = get_pokemon_raw_icon_url(pokemon)
 
@@ -3314,7 +3314,7 @@ $(function () {
     $selectExcludeRarity.on('change', function () {
         Store.set('excludedRarity', this.value)
         updateMap()
-    })    
+    })
 
     $selectSearchIconMarker = $('#iconmarker-style')
     $selectLocationIconMarker = $('#locationmarker-style')
