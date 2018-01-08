@@ -22,12 +22,11 @@ static/PogoAssets/*
 static/sprites/*.png
 static/images/appicons/*.png
 static/images/appicons/*.ico
-static/images/generated/gym/*.png
-static/images/generated/pokemon/*.png
-static/images/generated/*.png
+static/images/generated/*
 static/images/gym/*.png
 static/images/pokestop/*.png
 static/images/raid/*.png
+static/images/sex/*.png
 static/images/weather/*.png
 static/images/cluster/*.png
 static/icons-sprite.png

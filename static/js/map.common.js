@@ -1255,7 +1255,11 @@ function pokemonMarkerSprite(item, pokemonId, pokemonForm = 0, height) {
     const id = parseInt(pokemonId)
     const form = parseInt(pokemonForm)
 
-    if (id === 201 && form > 0) {
+    if (generateImages) {
+
+      return getPokemonIcon(item, pokemonSprites, height)
+
+    } else if (id === 201 && form > 0) {
 
       return getGoogleSprite(form - 1, pokemonFormSprites, height)
 
@@ -1265,15 +1269,8 @@ function pokemonMarkerSprite(item, pokemonId, pokemonForm = 0, height) {
 
     } else {
 
-      if (generateImages) {
+      return getGoogleSprite(id - 1, pokemonSprites, height)
 
-        return getPokemonIcon(item, pokemonSprites, height)
-
-      } else {
-
-        return getGoogleSprite(id - 1, pokemonSprites, height)
-
-      }
     }
 }
 
@@ -1385,4 +1382,19 @@ function cssPercentageCircle(text, value, perfect_val, good_val, ok_val, meh_val
                     <span class="prec" id="prec">${text}</span>
                 </div>
             </div>`
+}
+
+function get_pokemon_raw_icon_url(p) {
+    if (!generateImages) {
+        return `static/sprites/${p.pokemon_id}.png`
+    }
+    var url = 'pkm_img?raw=1&pkm=' + p.pokemon_id
+    var props = ['gender', 'form', 'costume', 'shiny']
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i]
+        if (prop in p && p[prop] != null && p[prop]) {
+            url += '&' + prop + '=' + p[prop]
+        }
+    }
+    return url
 }

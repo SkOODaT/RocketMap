@@ -687,13 +687,15 @@ function pokemonLabel(pokemon) {
     var spawnpoint_id = pokemon.spawnpoint_id
     var encounterIdLong = atob(encounterId)
 
+    var pokemon_icon = get_pokemon_raw_icon_url(pokemon)
+
     $.each(types, function (index, type) {
         typesDisplay += getTypeSpan(type)
     })
 
     var pkmIcon = ''
     if (generateImages) {
-      pkmIcon = `<img class='pokemon sprite' src='${getPokemonIconImg(id, gender, form, costume_id, weather_id, time_id)}'>`
+      pkmIcon = `<img class='pokemon sprite' src='${pokemon_icon}'>`
     } else {
       pkmIcon = `<img class='pokemon sprite' src='${pokemonIcon(id, form)}'>`
     }
@@ -974,12 +976,13 @@ function gymLabel(gym, includeMembers = true) {
 
         if (isRaidStarted) {
           // Use Pokémon-specific image.
+          var pokemon_icon = get_pokemon_raw_icon_url(raid)
           if (raid.pokemon_id !== null) {
                 rimage = `
                     <div class='raid container'>
                     <div class='raid container content-left'>
                         <div>
-                        <img class='gym sprite' src='static/sprites/${raid.pokemon_id}.png'>
+                        <img class='gym sprite' src='${pokemon_icon}'>
                         </div>
                     </div>
                     <div class='raid container content-right'>
@@ -1047,6 +1050,7 @@ function gymLabel(gym, includeMembers = true) {
     if (includeMembers) {
         memberStr = '<div>'
         gym.pokemon.forEach((member) => {
+            var pokemon_icon = generateImages ? `<img class='pokemon-icon' src='${get_pokemon_raw_icon_url(member)}'>` : `<i class='${pokemonSprite(member.pokemon_id, member.form)}'></i>`
             var deployStr = getDateStr(member.deployment_time)
             var shortdeployStr = getshortDateStr(member.deployment_time)
             var longdeployStr = getlongDateStr(member.deployment_time)
@@ -1097,7 +1101,7 @@ function gymLabel(gym, includeMembers = true) {
                     <span class='gym pokemon'>Lv: ${member.trainer_level}</span>
                   </div>
                   <div>
-                    <i class='${pokemonSprite(member.pokemon_id, member.form)}'></i>
+                    ${pokemon_icon}
                   </div>
                   <div>
                     <span class='gym pokemon'>${member.pokemon_name}${formString}X${member.num_upgrades}</span>
@@ -1501,7 +1505,7 @@ function customizePokemonMarker(marker, item, skipNotification) {
     if (isNotifyPoke(item)) {
         if (!skipNotification) {
             playPokemonSound(item['pokemon_id'], cryFileTypes)
-            sendNotification(notifyText.fav_title, notifyText.fav_text, 'static/sprites/' + item['pokemon_id'] + '.png', item['latitude'], item['longitude'])
+            sendNotification(notifyText.fav_title, notifyText.fav_text, get_pokemon_raw_icon_url(item), item['latitude'], item['longitude'])
         }
         if (marker.animationDisabled !== true) {
             marker.setAnimation(google.maps.Animation.BOUNCE)
@@ -2846,10 +2850,17 @@ function showGymDetails(id) { // eslint-disable-line no-unused-vars
         } else if (result.team_id === 0) {
             pokemonHtml = ''
         } else {
+            var pokemon_icon
+            if (generateImages) {
+                result.pokemon_id = result.guard_pokemon_id
+                pokemon_icon = `<img class='guard-pokemon-icon' src='${get_pokemon_raw_icon_url(result)}'>`
+            } else {
+                pokemon_icon = `<i class="pokemon-large-sprite n${result.guard_pokemon_id}"></i>`
+            }
             pokemonHtml = `
                 <center>
                     Gym Leader:<br>
-                    <i class="${pokemonSprite(result.guard_pokemon_id, 0, true)}"></i><br>
+                    ${pokemon_icon}<br>
                     <b>${result.guard_pokemon_name}</b>
 
                     <p style="font-size: .75em; margin: 5px;">
@@ -2886,10 +2897,18 @@ function getSidebarGymMember(pokemon) {
         formString += `(<b>${unownForm[`${pokemon.form}`]}</b>)`
     }
 
+    var pokemon_image = get_pokemon_raw_icon_url(pokemon)
+    var pmon_icon = ''
+    if (generateImages) {
+        pmon_icon = `<img class="gym pokemon sprite" src="${pokemon_image}">`
+    } else {
+        pmon_icon = `<i class="${pokemonSprite(pokemon.pokemon_id, pokemon.form, true)}" >`
+    }
+
     return `
                     <tr onclick=toggleGymPokemonDetails(this)>
                         <td width="35px">
-                            <i class="${pokemonSprite(pokemon.pokemon_id, pokemon.form, true)}" >
+                            ${pmon_icon}
                         </td>
                         <td>
                             <div class="gym pokemon" style="line-height:0.5em;"><b>${pokemon.pokemon_name}</b>${formString}X${pokemon.num_upgrades}</div>
@@ -3256,7 +3275,13 @@ $(function () {
         if (!state.id) {
             return state.text
         }
-        var $state = $(`<span><i class="${pokemonSprite(state.element.value)}"></i> ${state.text}</span>`)
+        var pokemon_icon
+        if (generateImages) {
+            pokemon_icon = `<img class='pokemon-select-icon' src='${get_pokemon_raw_icon_url({'pokemon_id': state.element.value.toString()})}'>`
+        } else {
+            pokemon_icon = `<i class="pokemon-sprite n${state.element.value.toString()}"></i>`
+        }
+        var $state = $(`<span>${pokemon_icon} ${state.text}</span>`)
         return $state
     }
 
