@@ -98,9 +98,9 @@ font = os.path.join(path_static, 'SF Intellivised.ttf')
 font_pointsize = 25
 
 
-def get_pokemon_raw_icon(pkm, gender=None, form=None, costume=None, weather=None, shiny=False):
+def get_pokemon_raw_icon(pkm, time, gender=None, form=None, costume=None, weather=None, shiny=False):
     if generate_images and pogo_assets:
-        source, target = pokemon_asset_path_shuffle(pkm, classifier='icon', gender=gender, form=form, costume=costume, weather=weather, shiny=shiny)
+        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='icon', gender=gender, form=form, costume=costume, weather=weather, shiny=shiny)
         im_lines = ['-fuzz 0.5% -trim +repage'
                     ' -scale "96x96>" -unsharp 0x1'
                     ' -background none -gravity center -extent 96x96'
@@ -110,13 +110,13 @@ def get_pokemon_raw_icon(pkm, gender=None, form=None, costume=None, weather=None
         return os.path.join(path_icons, '{}.png'.format(pkm))
 
 
-def get_pokemon_map_icon(pkm, weather=None, gender=None, form=None, costume=None, time=None):
+def get_pokemon_map_icon(pkm, time, weather=None, gender=None, form=None, costume=None):
     im_lines = []
 
     # Add Pokemon icon
     if pogo_assets:
-        source, target = pokemon_asset_path_shuffle(pkm, classifier='marker', gender=gender, form=form, costume=costume,
-                                            weather=weather, time=time)
+        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='marker', gender=gender, form=form, costume=costume,
+                                            weather=weather)
         target_size = 96
         im_lines.append(
             #' -fuzz 0.5% -trim +repage'
@@ -184,7 +184,7 @@ def get_pokemon_map_icon(pkm, weather=None, gender=None, form=None, costume=None
     return run_imagemagick(source, im_lines, target)
 
 
-def get_gym_icon(team, level, raidlevel, pkm, is_in_battle):
+def get_gym_icon(team, level, raidlevel, pkm, time, is_in_battle):
     level = int(level)
 
     if not generate_images:
@@ -194,7 +194,7 @@ def get_gym_icon(team, level, raidlevel, pkm, is_in_battle):
     if pkm and pkm != 'null':
         # Gym with ongoing raid
         out_filename = os.path.join(path_generated_gym, "{}_L{}_R{}_P{}.png".format(team, level, raidlevel, pkm))
-        im_lines.extend(draw_raid_pokemon(pkm, raidlevel))
+        im_lines.extend(draw_raid_pokemon(pkm, time, raidlevel))
         im_lines.extend(draw_raid_level(raidlevel))
         if level > 0:
             im_lines.extend(draw_gym_level(level))
@@ -223,10 +223,10 @@ def get_gym_icon(team, level, raidlevel, pkm, is_in_battle):
     return run_imagemagick(gym_image, im_lines, out_filename)
 
 
-def draw_raid_pokemon(pkm, raidlevel):
+def draw_raid_pokemon(pkm, time, raidlevel):
     raidlevel = int(raidlevel)
     if pogo_assets:
-        pkm_path, dummy = pokemon_asset_path_shuffle(int(pkm))
+        pkm_path, dummy = pokemon_asset_path_shuffle(int(pkm), time)
         trim = True
     else:
         pkm_path = os.path.join(path_icons, '{}.png'.format(pkm))
@@ -294,13 +294,14 @@ def battle_indicator_swords():
     ]
 
 
-def pokemon_asset_path(pkm, classifier=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False, time=None):
+def pokemon_asset_path(pkm, time, classifier=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False):
     gender_suffix = gender_assets_suffix = ''
     form_suffix = form_assets_suffix  = ''
     costume_suffix = costume_assets_suffix = ''
     weather_suffix = '_{}'.format(WeatherCondition.Name(weather)) if weather else ''
     shiny_suffix = '_shiny' if shiny else ''
     time_suffix = time_assets_suffix = ''
+    time_suffix = '_{}'.format(GetMapObjectsResponse.TimeOfDay.Name(time)) if time else ''
 
     if gender in (MALE, FEMALE):
         gender_assets_suffix = '_{:02d}'.format(gender - 1)
@@ -321,9 +322,6 @@ def pokemon_asset_path(pkm, classifier=None, gender=GENDER_UNSET, form=None, cos
     if not gender_assets_suffix and not form_assets_suffix and not costume_assets_suffix:
         gender_assets_suffix = '_16' if pkm == 201 else '_00' if pkm > 0 else ''
 
-    if time:
-        time_suffix = '_{}'.format(GetMapObjectsResponse.TimeOfDay.Name(time))
-
     assets_basedir = os.path.join(pogo_assets, 'decrypted_assets')
     assets_fullname = os.path.join(assets_basedir,
                                    'pokemon_icon_{:03d}{}{}{}{}.png'.format(pkm, gender_assets_suffix, form_assets_suffix,
@@ -340,23 +338,24 @@ def pokemon_asset_path(pkm, classifier=None, gender=GENDER_UNSET, form=None, cos
             log.warning("Cannot find PogoAssets file {}".format(assets_fullname))
             # Dummy Pokemon icon
             return os.path.join(assets_basedir, 'pokemon_icon_000.png'), os.path.join(target_path, 'pkm_000.png')
-        return pokemon_asset_path(pkm, classifier=classifier, gender=MALE, form=form, costume=costume, weather=weather,
+        return pokemon_asset_path(pkm, time, classifier=classifier, gender=MALE, form=form, costume=costume, weather=weather,
                                   shiny=shiny)
 
 
-def pokemon_asset_path_shuffle(pkm, classifier=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False, time=None):
+def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False):
     gender_suffix = gender_assets_suffix = ''
     form_suffix = form_assets_suffix  = ''
     costume_suffix = costume_assets_suffix = ''
     weather_suffix = '_{}'.format(WeatherCondition.Name(weather)) if weather else ''
     shiny_suffix = '_shiny' if shiny else ''
-    time_suffix = time_assets_suffix = ''
+    time_suffix = '_{}'.format(GetMapObjectsResponse.TimeOfDay.Name(time)) if time else ''
 
-    if gender in (MALE, FEMALE):
-        gender_assets_suffix = ''.format(gender - 1)
+    # Genderless For Ditto, Should Be Proper Anyway...
+    if gender in (GENDERLESS, MALE, FEMALE):
+        gender_assets_suffix = ''
         gender_suffix = '_{}'.format(Gender.Name(gender))
     elif gender in (GENDER_UNSET, GENDERLESS):
-        gender_assets_suffix = '_' if pkm > 0 else ''
+        gender_assets_suffix = '' if pkm > 0 else ''
 
     if form:
         # Form = no gender
@@ -370,9 +369,6 @@ def pokemon_asset_path_shuffle(pkm, classifier=None, gender=GENDER_UNSET, form=N
 
     if not gender_assets_suffix and not form_assets_suffix and not costume_assets_suffix:
         gender_assets_suffix = '_16' if pkm == 201 else '' if pkm > 0 else ''
-
-    if time:
-        time_suffix = '_{}'.format(GetMapObjectsResponse.TimeOfDay.Name(time))
 
     assets_basedir = os.path.join(pogo_assets, 'sprites')
     assets_fullname = os.path.join(assets_basedir,
@@ -390,7 +386,7 @@ def pokemon_asset_path_shuffle(pkm, classifier=None, gender=GENDER_UNSET, form=N
             log.warning("Cannot find PogoAssets file {}".format(assets_fullname))
             # Dummy Pokemon icon
             return os.path.join(assets_basedir, 'pokemon_icon_000.png'), os.path.join(target_path, 'pkm_000.png')
-        return pokemon_asset_path_shuffle(pkm, classifier=classifier, gender=MALE, form=form, costume=costume, weather=weather,
+        return pokemon_asset_path_shuffle(pkm, time, classifier=classifier, gender=MALE, form=form, costume=costume, weather=weather,
                                   shiny=shiny)
 
 
