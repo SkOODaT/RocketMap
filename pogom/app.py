@@ -176,7 +176,6 @@ class Pogom(Flask):
         costume = int(request.args.get('costume')) if 'costume' in request.args else None
         weather = int(request.args.get('weather')) if 'weather' in request.args else 0
         time = int(request.args.get('time')) if 'time' in request.args else 0
-        #return send_file(get_pokemon_icon(pkm, gender=gender, form=form, costume=costume, weather=weather, time=time), mimetype='image/png')
         shiny = 'shiny' in request.args
         if raw:
             filename = get_pokemon_raw_icon(pkm, time, gender=gender, form=form, costume=costume, weather=weather,
