@@ -29,6 +29,7 @@ from cachetools import TTLCache
 from cachetools import cached
 from timeit import default_timer
 
+from pogom.dyn_img import get_gym_icon, get_pokemon_map_icon
 from pogom.gainxp import gxp_spin_stops, DITTO_CANDIDATES_IDS, is_ditto, lure_pokestop
 from pogom.pgscout import pgscout_encounter
 from .utils import (get_pokemon_name, get_pokemon_types,
@@ -2505,6 +2506,9 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 log.debug('Ignoring Pokemon id: %i.', pokemon_id)
                 filtered += 1
                 continue
+            # Icon Auto Generation
+            if args.generate_images and args.pogo_assets:
+                generate_pokemon_images(p, worldtime)
 
             # Catch pokemon to check for Ditto if --gain-xp enabled
             # Original code by voxx!
@@ -2756,6 +2760,9 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 gym_display = f.gym_display
                 raid_info = f.raid_info
                 is_in_battle = f.is_in_battle
+                # Icon Auto Generation
+                if args.generate_images and args.pogo_assets:
+                    generate_gym_images(f)
                 # Send gyms to webhooks.
                 if 'gym' in args.wh_types:
                     raid_active_until = 0
@@ -2991,6 +2998,40 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
         'bad_scan': False,
         'scan_secs': now_secs
     }
+
+
+def generate_pokemon_images(p, worldtime):
+    # (Icons Can Be Dynamically Used For Webhook Alerts,
+    # If Generated Before The Alert.)
+    # Convert A Bunch Of Stuff To Work With Dynimg.py
+    icnpkm = p.pokemon_data.pokemon_id
+    icngender = p.pokemon_data.pokemon_display.gender if p.pokemon_data.pokemon_display.gender else None
+    icnform = p.pokemon_data.pokemon_display.form if p.pokemon_data.pokemon_display.form else None
+    icncostume = p.pokemon_data.pokemon_display.costume if p.pokemon_data.pokemon_display.costume else None
+    icnweather = p.pokemon_data.pokemon_display.weather_boosted_condition if p.pokemon_data.pokemon_display.weather_boosted_condition else 0
+    icntime = worldtime if worldtime else 0
+    log.debug("%s - %s - %s - %s - %s - %s", icnpkm, icntime, icngender, icnform, icncostume, icnweather)
+    get_pokemon_map_icon(icnpkm, icntime, gender=icngender, form=icnform, costume=icncostume, weather=icnweather)
+
+
+def generate_gym_images(f):
+    # (Icons Can Be Dynamically Used For Webhook Alerts,
+    # If Generated Before The Alert.)
+    # Convert A Bunch Of Stuff To Work With Dynimg.py
+    pogoteams = {
+        0: 'Uncontested',
+        1: 'Mystic',
+        2: 'Valor',
+        3: 'Instinct'
+    }
+    icnteam = pogoteams[f.owned_by_team]
+    icnlevel = 6 - f.gym_display.slots_available
+    icnraidlevel = f.raid_info.raid_level if f.raid_info.raid_level else None
+    icnrpkm = f.raid_info.raid_pokemon.pokemon_id if f.raid_info.raid_pokemon.pokemon_id else None
+    icnis_in_battle = f.is_in_battle if f.is_in_battle else 0
+    icnworldtime = None #Not Implmented Yet
+    log.debug("%s - %s - %s - %s - %s - %s", icnteam, icnlevel, icnraidlevel, icnrpkm, icnworldtime, icnis_in_battle)
+    get_gym_icon(icnteam, icnlevel, icnraidlevel, icnrpkm, icnworldtime, icnis_in_battle)
 
 
 def encounter_pokemon(args, pokemon, account, pgacc, account_sets, status,
