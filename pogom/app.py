@@ -185,7 +185,6 @@ class Pogom(Flask):
         return send_file(filename, mimetype='image/png')
 
 
-
     def scout_pokemon(self):
         args = get_args()
         if args.pgscout_url:
