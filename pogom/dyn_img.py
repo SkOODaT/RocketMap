@@ -213,6 +213,7 @@ def get_gym_icon(team, level, raidlevel, pkm, time, is_in_battle):
     else:
         # Neutral gym
         out_filename = os.path.join(path_generated_gym, '{}_L{}.png'.format(team, level))
+        return out_filename
         #return os.path.join(path_gym, '{}.png'.format(team))
 
     # Battle Indicator
