@@ -217,7 +217,7 @@ def get_gym_icon(team, level, raidlevel, pkm, time, is_in_battle):
         #return os.path.join(path_gym, '{}.png'.format(team))
 
     # Battle Indicator
-    if is_in_battle:
+    if is_in_battle and pkm == 'null':
         out_filename = out_filename.replace('.png', '_Battle.png')
         im_lines.extend(draw_battle_indicator())
 
