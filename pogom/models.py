@@ -2767,11 +2767,6 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 # Icon Auto Generation
                 if args.generate_images and args.pogo_assets:
                     generate_gym_images(f)
-                # Send gyms to webhooks.
-                if 'gym' in args.wh_types:
-                    raid_active_until = 0
-                    raid_battle_ms = raid_info.raid_battle_ms
-                    raid_end_ms = raid_info.raid_end_ms
 
                 with Gym.database().execution_context():
                     Query = Gym.select().where(Gym.gym_id == f.id).dicts()
@@ -2779,6 +2774,12 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                     for gym in list(Query):
                         park_id = gym['park']
                     log.debug(park_id)
+
+                # Send gyms to webhooks.
+                if 'gym' in args.wh_types:
+                    raid_active_until = 0
+                    raid_battle_ms = raid_info.raid_battle_ms
+                    raid_end_ms = raid_info.raid_end_ms
 
                     if raid_battle_ms / 1000 > time.time():
                         raid_active_until = raid_end_ms / 1000
