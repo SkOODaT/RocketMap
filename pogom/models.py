@@ -52,7 +52,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 30
+db_schema_version = 31
 
 
 class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
@@ -630,7 +630,7 @@ class PokestopDetails(BaseModel):
     url = CharField()
     item_id = SmallIntegerField(null=True)
     deployer = CharField(null=True, max_length=50)
-    expires = DateTimeField(default=datetime.utcnow)
+    expires = DateTimeField(default=datetime.utcnow, null=True)
     last_scanned = DateTimeField(default=datetime.utcnow)
 
 
@@ -639,6 +639,7 @@ class Gym(BaseModel):
     team_id = SmallIntegerField()
     guard_pokemon_id = SmallIntegerField()
     slots_available = SmallIntegerField()
+    park = BooleanField(default=False)
     enabled = BooleanField()
     latitude = DoubleField()
     longitude = DoubleField()
@@ -896,6 +897,9 @@ class Gym(BaseModel):
 
         return filtered
 
+    @staticmethod
+    def is_gym_park(id, park):
+        Gym.update(park=park).where(Gym.gym_id == str(id)).execute()
 
 class Raid(BaseModel):
     gym_id = Utf8mb4CharField(primary_key=True, max_length=50)
@@ -2769,6 +2773,13 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                     raid_battle_ms = raid_info.raid_battle_ms
                     raid_end_ms = raid_info.raid_end_ms
 
+                with Gym.database().execution_context():
+                    Query = Gym.select().where(Gym.gym_id == f.id).dicts()
+                    park_id = None
+                    for gym in list(Query):
+                        park_id = gym['park']
+                    log.debug(park_id)
+
                     if raid_battle_ms / 1000 > time.time():
                         raid_active_until = raid_end_ms / 1000
 
@@ -2803,7 +2814,9 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                         'raid_active_until':
                             raid_active_until,
                         'is_in_battle':
-                            is_in_battle
+                            is_in_battle,
+                        'park':
+                            int(park_id)
                     }))
 
                 gyms[f.id] = {
@@ -2837,7 +2850,9 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                         datetime.utcfromtimestamp(
                             f.last_modified_timestamp_ms / 1000.0),
                     'is_in_battle':
-                        is_in_battle
+                        is_in_battle,
+                    'park':
+                        int(park_id)
                 }
 
                 if not args.no_raids and f.type == 0:
@@ -2880,7 +2895,8 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                                 'start': raid_info.raid_battle_ms / 1000,
                                 'end': raid_info.raid_end_ms / 1000,
                                 'latitude': f.latitude,
-                                'longitude': f.longitude
+                                'longitude': f.longitude,
+                                'park': int(park_id)
                             })
                             wh_update_queue.put(('raid', wh_raid))
 
@@ -3273,6 +3289,13 @@ def parse_gyms(args, gym_responses, wh_update_queue, db_update_queue):
             'url': g.url
         }
 
+        with Gym.database().execution_context():
+            Query = Gym.select().where(Gym.gym_id == gym_id).dicts()
+            park_id = None
+            for gym in list(Query):
+                park_id = gym['park']
+            log.debug(park_id)
+
         if 'gym-info' in args.wh_types:
             webhook_data = {
                 'id': b64encode(str(gym_id)),
@@ -3287,6 +3310,7 @@ def parse_gyms(args, gym_responses, wh_update_queue, db_update_queue):
                 'description': g.description,
                 'url': g.url,
                 'pokemon': [],
+                'park': int(park_id)
             }
 
         for member in gym_state.gym_defender:
@@ -4183,6 +4207,10 @@ def database_migrate(db, old_ver):
             migrator.add_column('gym', 'shiny',
                                 BooleanField(null=True))
         )
+
+    if old_ver < 31:
+        migrate(
+            migrator.add_column('gym', 'park', BooleanField(default=False)))
 
     # Always log that we're done.
     log.info('Schema upgrade complete.')

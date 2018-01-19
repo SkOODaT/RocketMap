@@ -30,3 +30,4 @@ cHaversine==0.3.0
 colorlog
 matplotlib
 psutil==5.3.1
+overpy==0.4

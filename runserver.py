@@ -32,6 +32,7 @@ from pogom.models import (init_database, create_tables, drop_tables,
                           Gym, Pokestop)
 from pogom.webhook import wh_updater
 
+from pogom.osm import exgyms
 from pogom.proxy import load_proxies, check_proxies, proxies_refresher
 from pogom.fakeSearcher import fake_search_thread
 from pogom.search import search_overseer_thread
@@ -271,6 +272,16 @@ def main():
         sys.exit(1)
 
     args.root_path = os.path.dirname(os.path.abspath(__file__))
+
+    if args.ex_gyms:
+        if args.geofence_file == '':
+            log.critical('A geofence is required to find EX-gyms')
+            sys.exit(1)
+        else:
+            exgyms(args.geofence_file)
+            log.info('Finished checking gyms against OSM parks, exiting')
+            sys.exit(1)
+
     init_args(args)
 
     # Initialize Mr. Mime library

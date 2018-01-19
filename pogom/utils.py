@@ -582,6 +582,10 @@ def get_args():
                         help='Choose area for Pokestop luring')
     parser.add_argument('-nlf', '--nolureFence',
                         help='Choose area that CANNOT have Pokestop luring')
+    parser.add_argument('-exg', '--ex-gyms',
+                        help=('Fetch OSM parks within geofence and ' +
+                              'mark gyms that are in sed areas'),
+                        action='store_true', default=False)
 
     parser.set_defaults(DEBUG=False)
 
