@@ -2935,7 +2935,7 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
     # Look for spawnpoints within scan_location that are not here to see if we
     # can narrow down tth window.
     for sp in ScannedLocation.linked_spawn_points(scan_location['cellid']):
-        if sp['missed_count'] > 5:
+        if sp['missed_count'] > 10:
                 continue
 
         if sp['id'] in sp_id_list:
@@ -3567,7 +3567,7 @@ def clean_db_loop(args):
             log.exception('Exception in clean_db_loop: %s', repr(e))
 
 
-def db_clean_spawnpoints(step=50, days_age=30, missed=6):
+def db_clean_spawnpoints(step=50, days_age=30, missed=5):
     start = datetime.utcnow()
     sp_delete = set()
     sl_delete = set()
