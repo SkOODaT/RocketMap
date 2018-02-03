@@ -1,4 +1,5 @@
 {
-    "appAllowed": false,
-    "statsAllowed": false
+    "name": "SkOODaT",
+    "appAllowed": true,
+    "statsAllowed": true
 }
