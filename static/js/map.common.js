@@ -1050,6 +1050,14 @@ var StoreOptions = {
         default: [],
         type: StoreTypes.JSON
     },
+    'showTimers': {
+        default: true,
+        type: StoreTypes.Boolean
+    },
+    'hideTimersAtZoomLevel': {
+        default: 16.5,
+        type: StoreTypes.Number
+    },
     'searchMarkerStyle': {
         default: 'pokesition',
         type: StoreTypes.String
@@ -1258,23 +1266,14 @@ function pokemonSprite(pokemonId, pokemonForm = 0, useLargeSprite = false) {
 function pokemonMarkerSprite(item, pokemonId, pokemonForm = 0, height) {
     const id = parseInt(pokemonId)
     const form = parseInt(pokemonForm)
-
-    if (generateImages) {
-
-      return getPokemonIcon(item, pokemonSprites, height)
-
-    } else if (id === 201 && form > 0) {
-
-      return getGoogleSprite(form - 1, pokemonFormSprites, height)
-
-    } else if (isMedalPokemonMap(item)) {
-
+    if (isMedalPokemonMap(item)) {
       return getGoogleSprite(id - 1, pokemonMedalSprites, height)
-
-    } else {
-
+    } else if (generateImages) {
+      return getPokemonIcon(item, pokemonSprites, height)
+    }	else if (id === 201 && form > 0) {
+      return getGoogleSprite(form - 1, pokemonFormSprites, height)
+    } else  {
       return getGoogleSprite(id - 1, pokemonSprites, height)
-
     }
 }
 
@@ -1318,17 +1317,33 @@ function setupPokemonMarker(item, map, isBounceDisabled, scaleByRarity, isNotify
     // Scale icon size up with the map exponentially, also size with rarity.
     const markerDetails = setupPokemonMarkerDetails(item, map, scaleByRarity, isNotifyPkmn)
     const icon = markerDetails.icon
-
-    var marker = new google.maps.Marker({
-        position: {
-            lat: item['latitude'],
-            lng: item['longitude']
-        },
-        zIndex: 9949 + markerDetails.rarityValue,
-        icon: icon,
-        animationDisabled: isBounceDisabled
-    })
-
+    var hideTimersAtZoomLevel = Store.get('hideTimersAtZoomLevel')
+    var showTimers = Store.get('showTimers')
+    var marker
+    if (showTimers && map.getZoom() >= hideTimersAtZoomLevel) {
+        marker = new MarkerWithLabel({ // eslint-disable-line no-undef
+            position: {
+                lat: item['latitude'],
+                lng: item['longitude']
+            },
+            zIndex: 9949 + markerDetails.rarityValue,
+            icon: icon,
+            labelAnchor: new google.maps.Point(13, - markerDetails.iconSize / 2.4),
+            labelContent: '<span class=\'label-countdown\' disappears-at=\'' + item['disappear_time'] + '\'> </span>',
+            labelClass: 'pokemonlabel',
+            animationDisabled: isBounceDisabled
+        })
+    } else {
+        marker = new google.maps.Marker({
+            position: {
+                lat: item['latitude'],
+                lng: item['longitude']
+            },
+            zIndex: 9949 + markerDetails.rarityValue,
+            icon: icon,
+            animationDisabled: isBounceDisabled
+        })
+    }
     return marker
 }
 

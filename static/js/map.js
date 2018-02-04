@@ -23,6 +23,7 @@ var $selectLuredPokestopsOnly
 var $selectSearchIconMarker
 var $selectLocationIconMarker
 var $switchGymSidebar
+var $showTimers
 
 const language = document.documentElement.lang === '' ? 'en' : document.documentElement.lang
 var idToPokemon = {}
@@ -313,6 +314,11 @@ function initMap() { // eslint-disable-line no-unused-vars
     map.addListener('idle', updateMap)
 
     map.addListener('zoom_changed', function () {
+        //Fix For Timer Drawing
+        if (Store.get('showTimers') && map.getZoom() >= Store.get('hideTimersAtZoomLevel')) {
+          RedrawPokemon()
+        }
+
         if (storeZoom === true) {
             Store.set('zoomLevel', this.getZoom())
         } else {
@@ -504,6 +510,7 @@ function initSidebar() {
     $('#pokemon-settings-wrapper').toggle(Store.get('showPokemon'))
     $('#pokemon-scale-by-rarity-switch').prop('checked', Store.get('scaleByRarity'))
     $('#pokestops-switch').prop('checked', Store.get('showPokestops'))
+    $('#timer-switch').prop('checked', Store.get('showTimers'))
     $('#lured-pokestops-only-switch').val(Store.get('showLuredPokestopsOnly'))
     $('#lured-pokestops-only-wrapper').toggle(Store.get('showPokestops'))
     $('#geoloc-switch').prop('checked', Store.get('geoLocate'))
@@ -656,12 +663,9 @@ function isMedalPokemonMap(item) {
     if (item['height'] == null && item['weight'] == null) {
         return false
     }
-    var baseHeight = (item['pokemon_id'] === 19) ? 0.30 : 0.90
-    var baseWeight = (item['pokemon_id'] === 129) ? 3.50 : 10.00
-    var ratio = sizeRatio(item['height'], item['weight'], baseHeight, baseWeight)
     if (Store.get('showMedal')) {
-      if ((item['pokemon_id'] === 19 && ratio < 1.5) ||
-            (item['pokemon_id'] === 129 && ratio > 2.5 && item['weight'] >= 13.13)) {
+      if ((item['pokemon_id'] === 19 && item['weight'] < 2.41) ||
+            (item['pokemon_id'] === 129 && item['weight'] >= 13.13)) {
           return true
       }
     }
@@ -733,13 +737,10 @@ function pokemonLabel(pokemon) {
     }
 
     var medalString = ''
-    var baseHeight = (pokemon.pokemon_id === 19) ? 0.30 : 0.90
-    var baseWeight = (pokemon.pokemon_id === 129) ? 3.50 : 10.00
-    var ratio = sizeRatio(pokemon.height, pokemon.weight, baseHeight, baseWeight)
-    if (pokemon.pokemon_id == 19 && ratio < 1.5) {
+    if (pokemon.pokemon_id == 19 && pokemon.weight <= 2.41) {
       medalString += `<span>Tiny</span>`
     }
-    if (pokemon.pokemon_id == 129 && ratio > 2.5 && pokemon.weight >= 13.13) {
+    if (pokemon.pokemon_id == 129 && pokemon.weight >= 13.13) {
       medalString += `<span>Big</span>`
     }
 
@@ -2582,7 +2583,10 @@ var updateLabelDiffTime = function () {
         if (disappearsAt.ttime < disappearsAt.now) {
             timestring = '(expired)'
         } else {
-            timestring = lpad(hours, 2, 0) + ':' + lpad(minutes, 2, 0) + ':' + lpad(seconds, 2, 0)
+            if (hours) {
+              timestring += lpad(hours, 2, 0) + ':'
+            }
+            timestring = lpad(minutes, 2, 0) + ':' + lpad(seconds, 2, 0)
         }
 
         $(element).text(timestring)
@@ -3255,6 +3259,13 @@ $(function () {
             mapData[dType] = {}
         })
         updateMap()
+    })
+
+    $showTimers = $('#timer-switch')
+
+    $showTimers.on('change', function () {
+        Store.set('showTimers', this.checked)
+        RedrawPokemon()
     })
 
     $selectSearchIconMarker = $('#iconmarker-style')

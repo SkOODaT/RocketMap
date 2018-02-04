@@ -274,6 +274,16 @@
               </div>
             </div>
               {% endif %}
+            <div class="form-control switch-container">
+              <h3>Timers</h3>
+              <div class="onoffswitch">
+                <input id="timer-switch" type="checkbox" name="timer-switch" class="onoffswitch-checkbox" checked>
+                <label class="onoffswitch-label" for="timer-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
               {% if show.pokemons %}
             <div class="form-control">
               <label for="exclude-pokemon">
@@ -627,5 +637,6 @@
     <script src="{{ url_for('static', filename='dist/js/weather.min.js').lstrip('/') }}"></script>
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_key }}&amp;callback=initMap&amp;libraries=places,geometry"></script>
     <script async src='https://www.google-analytics.com/analytics.js'></script>
+    <script defer src="{{ url_for('static', filename='dist/js/label.min.js').lstrip('/') }}"></script>
   </body>
 </html>
