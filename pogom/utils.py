@@ -575,7 +575,17 @@ def get_args():
                         help=('Fetch OSM parks within geofence and ' +
                               'mark gyms that are in sed areas'),
                         action='store_true', default=False)
-
+    parser.add_argument('-uas', '--user-auth-service', default=None,
+                        help='Force end users to auth to an external service.')
+    parser.add_argument('-uascid', '--uas-client-id', default=None,
+                        help='Client ID for user external authentication.')
+    parser.add_argument('-uascs', '--uas-client-secret', default=None,
+                        help='Client Secret for user external authentication.')
+    parser.add_argument('-uasrdg', '--uas-discord-required-guild', default=None,
+                        help='Required Discord Guild for user external authentication.')
+    parser.add_argument('-uasdgi', '--uas-discord-guild-invite', default=None,
+                        help='Required Discord Guild for user external authentication.')
+                        
     parser.set_defaults(DEBUG=False)
 
     args = parser.parse_args()
@@ -1446,4 +1456,4 @@ def peewee_attr_to_col(cls, field):
     else:
         field_column = field
 
-    return field_column    
+    return field_column
