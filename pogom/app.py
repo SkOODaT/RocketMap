@@ -25,8 +25,8 @@ from .models import (Geofence, Pokemon, LurePokemon, Gym, Pokestop, ScannedLocat
                      MainWorker, WorkerStatus, Token, HashKeys,
                      SpawnPoint, Weather)
 from .utils import now, dottedQuadToNum, degrees_to_cardinal
-from .client_auth import redirect_client_to_auth, valid_client_auth, \
-    valid_discord_guild, redirect_to_discord_guild_invite
+from .client_auth import (redirect_client_to_auth, valid_client_auth, valid_discord_guild,
+                          redirect_to_discord_guild_invite, valid_discord_guild_role)
 from .blacklist import fingerprints, get_ip_blacklist
 
 from pgoapi.protos.pogoprotos.map.weather.gameplay_weather_pb2 import *
@@ -423,8 +423,11 @@ class Pogom(Flask):
         if args.user_auth_service == "Discord":
           if not valid_client_auth(request, self.user_auth_code_cache, args):
             return redirect_client_to_auth(request.url_root, args)
-          if not valid_discord_guild(request, self.user_auth_code_cache, args):
-            return redirect_to_discord_guild_invite(args)
+          if args.uas_discord_required_guild:
+            if not valid_discord_guild(request, self.user_auth_code_cache, args):
+              return redirect_to_discord_guild_invite(args)
+            if args.uas_discord_required_roles and not valid_discord_guild_role(request, self.user_auth_code_cache, args):
+              return redirect_to_discord_guild_invite(args)
 
         # Request time of this request.
         d['timestamp'] = datetime.utcnow()
