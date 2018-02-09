@@ -2568,13 +2568,9 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 pokemon[p.encounter_id]['form'] = (p.pokemon_data
                                                     .pokemon_display.form)
 
-            if pokemon_id == 132:
-                pokemon[p.encounter_id]['rating_attack'] = 'A'
-                pokemon[p.encounter_id]['rating_defense'] = 'A'
-                pokemon[p.encounter_id]['gender'] = 3
-                pokemon[p.encounter_id]['move_1'] = 242
-                pokemon[p.encounter_id]['move_2'] = 133
-                pokemon_info = None
+            if pokemon_id == 351:
+                pokemon[p.encounter_id]['form'] = (p.pokemon_data
+                                                    .pokemon_display.form)
 
             #log.info('Pokemon %s Shiny: %s', pokemon_id, p.pokemon_data.pokemon_display.shiny)
             #printPokemon(pokemon_id, p.latitude, p.longitude,
@@ -2614,6 +2610,14 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                     'cp': pokemon_info.cp,
                     'cp_multiplier': pokemon_info.cp_multiplier
                 })
+
+            if pokemon_id == 132:
+                pokemon[p.encounter_id]['rating_attack'] = 'A'
+                pokemon[p.encounter_id]['rating_defense'] = 'A'
+                pokemon[p.encounter_id]['gender'] = 3
+                pokemon[p.encounter_id]['move_1'] = 242
+                pokemon[p.encounter_id]['move_2'] = 133
+                pokemon_info = None
 
             if 'pokemon' in args.wh_types:
                 if (not args.webhook_whitelist

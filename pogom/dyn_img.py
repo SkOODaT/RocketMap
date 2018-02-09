@@ -360,10 +360,17 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
     elif gender in (GENDER_UNSET, GENDERLESS):
         gender_assets_suffix = '' if pkm > 0 else ''
 
-    if form:
-        # Form = no gender
+    if form and pkm == 201:
+        # Unown = no gender
         gender_suffix = gender_assets_suffix = ''
         form_assets_suffix = '_{:02d}'.format(form + 10)
+        form_suffix = '_{}'.format(Form.Name(form))
+
+    if form and pkm == 351:
+        # Castform
+        gender_suffix = gender_assets_suffix = ''
+        gender_suffix = '_{}'.format(Gender.Name(gender))
+        form_assets_suffix = '_{:02d}'.format(form)
         form_suffix = '_{}'.format(Form.Name(form))
 
     if costume:
