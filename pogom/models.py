@@ -598,11 +598,7 @@ class Pokestop(BaseModel):
                              (Pokestop.longitude >= w) &
                              (Pokestop.longitude <= e)
                              ))
-        # Sqlite doesn't support distinct on columns.
-        if args.db_type == 'mysql':
-            query = query.distinct(Pokestop.pokestop_id)
-        else:
-            query = query.group_by(Pokestop.pokestop_id)
+        query = query.distinct(Pokestop.pokestop_id)
 
         s = list(query.dicts())
 
@@ -875,11 +871,7 @@ class Gym(BaseModel):
                              (Gym.longitude >= w) &
                              (Gym.longitude <= e)
                              ))
-        # Sqlite doesn't support distinct on columns.
-        if args.db_type == 'mysql':
-            query = query.distinct(Gym.gym_id)
-        else:
-            query = query.group_by(Gym.gym_id)
+        query = query.distinct(Gym.gym_id)
 
         s = list(query.dicts())
 
@@ -1579,11 +1571,7 @@ class SpawnPoint(BaseModel):
                              (SpawnPoint.longitude >= w) &
                              (SpawnPoint.longitude <= e)
                              ))
-        # Sqlite doesn't support distinct on columns.
-        if args.db_type == 'mysql':
-            query = query.distinct(SpawnPoint.id)
-        else:
-            query = query.group_by(SpawnPoint.id)
+        query = query.distinct(SpawnPoint.id)
 
         with SpawnPoint.database().execution_context():
             s = list(query.dicts())
