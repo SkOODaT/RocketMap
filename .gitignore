@@ -53,3 +53,5 @@ static/js/custom.js
 !static/data/*
 !static/icons/hsl*.png
 !static/app/settings.json
+private.key
+*.crt
