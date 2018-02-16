@@ -367,9 +367,11 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
         form_suffix = '_{}'.format(Form.Name(form))
 
     if form and pkm == 351:
-        # Castform
-        gender_suffix = gender_assets_suffix = ''
-        gender_suffix = '_{}'.format(Gender.Name(gender))
+        # Castform Gender
+        if gender:
+            gender_suffix = gender_assets_suffix = ''
+            gender_suffix = '_{}'.format(Gender.Name(gender))
+        # Castform Form
         form_assets_suffix = '_{:02d}'.format(form)
         form_suffix = '_{}'.format(Form.Name(form))
 
