@@ -39,7 +39,7 @@ def pgscout_encounter(p, forced=False):
 
     return r.json() if r.status_code == 200 else scout_error(
         "Got error {} from scout service.".format(r.status_code))
-		
+
 def perform_lure(p):
     args = get_args()
     # Assemble request

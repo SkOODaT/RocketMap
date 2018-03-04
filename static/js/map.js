@@ -82,7 +82,7 @@ const audio = new Audio('static/sounds/pokewho.mp3')
 const cryFileTypes = ['wav', 'mp3', 'ogg']
 
 const genderType = ['L', '♂', '♀', '⚲']
-const unownForm = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?']
+const forms = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?', i8ln('Normal'), i8ln('Sunny'), i8ln('Rainy'), i8ln('Snowy'), i8ln('Normal'), i8ln('Attack'), i8ln('Defense'), i8ln('Speed')]
 
 const dittoTexts = {
   16: `<span>(Pidgey)</span>`,
@@ -655,7 +655,6 @@ function scout(encounterId) { // eslint-disable-line no-unused-vars
                 pkm['catch_prob_3'] = data.catch_prob_3
                 pkm['rating_attack'] = data.rating_attack
                 pkm['rating_defense'] = data.rating_defense
-                pkm['previous_id'] = data.previous_id
                 pkm['weather_id'] = data.weather_id
                 pkm.marker.infoWindow.setContent(pokemonLabel(pkm))
             } else {
@@ -718,15 +717,14 @@ function pokemonLabel(pokemon) {
     var spawnpoint_id = pokemon.spawnpoint_id
     var encounterIdLong = encounterId
 
-    var pokemon_icon = get_pokemon_raw_icon_url(pokemon)
-
     $.each(types, function (index, type) {
         typesDisplay += getTypeSpan(type)
     })
 
+    //get_pokemon_raw_icon_url(pokemon)
     var pkmIcon = ''
     if (generateImages) {
-      pkmIcon = `<img class='pokemon sprite' src='${pokemon_icon}'>`
+      pkmIcon = `<img class='pokemon sprite' src='${getPokemonIconImg(id, weight, height, gender, form, costume_id, weather_id, time_id, previous_id)}'>`
     } else {
       pkmIcon = `<img class='pokemon sprite' src='${pokemonIcon(id, form)}'>`
     }
@@ -735,9 +733,9 @@ function pokemonLabel(pokemon) {
     var contentstring = ''
     var formString = ''
 
-    if (id === 201 && form !== null && form > 0) {
-        formString += `(${unownForm[form]})`
-    }
+    if (form !== null && form > 0 && forms.length > form) {
+        formString += `(${forms[form]})`
+     }
 
     var dittoString = ''
     if (id === 132 && previous_id != null) {
@@ -1118,7 +1116,7 @@ function gymLabel(gym, includeMembers = true) {
 
             var formString = ''
             if (member.pokemon_id === 201 && member.form !== null && member.form > 0) {
-                formString += `(${unownForm[`${member.form}`]})`
+                formString += `(${forms[`${member.form}`]})`
             }
 
             memberStr += `
@@ -2965,7 +2963,7 @@ function getSidebarGymMember(pokemon) {
     var formString = ''
 
     if (pokemon.pokemon_id === 201 && pokemon.form !== null && pokemon.form > 0) {
-        formString += `(<b>${unownForm[`${pokemon.form}`]}</b>)`
+        formString += `(<b>${forms[`${pokemon.form}`]}</b>)`
     }
 
     var pokemon_image = get_pokemon_raw_icon_url(pokemon)

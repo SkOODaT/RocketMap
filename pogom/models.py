@@ -2504,9 +2504,6 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 log.debug('Ignoring Pokemon id: %i.', pokemon_id)
                 filtered += 1
                 continue
-            # Icon Auto Generation
-            if args.generate_images and args.pogo_assets:
-                generate_pokemon_images(p, worldtime)
 
             # Catch pokemon to check for Ditto if --gain-xp enabled
             # Original code by voxx!
@@ -2514,8 +2511,8 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
             if args.gain_xp and not pgacc.get_stats(
                 'level') >= 30 and pokemon_id in DITTO_CANDIDATES_IDS and have_balls:
                 if is_ditto(args, pgacc, p):
-                    pokemon_id = 132
                     previous_id = p.pokemon_data.pokemon_id
+                    pokemon_id = 132
 
             # Scan for IVs/CP and moves.
             pokemon_info = False
@@ -2595,7 +2592,6 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                     'catch_prob_3': scout_result['catch_prob_3'],
                     'rating_attack': scout_result['rating_attack'],
                     'rating_defense': scout_result['rating_defense'],
-                    'previous_id' : scout_result['previous_id'],
                     'weather_id' : scout_result['weather_id'],
                 })
                 encounter_level = scout_result['scout_level']
@@ -2609,10 +2605,15 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                     'move_2': pokemon_info.move_2,
                     'height': pokemon_info.height_m,
                     'weight': pokemon_info.weight_kg,
-                    'gender': pokemon_info.gender,
+                    #'gender': pokemon_info.pokemon_display.gender,
                     'cp': pokemon_info.cp,
                     'cp_multiplier': pokemon_info.cp_multiplier
                 })
+
+                if pokemon_info.pokemon_display.gender:
+                    pokemon[p.encounter_id].update({
+                        'gender': pokemon_info.pokemon_display.gender
+                    })
 
             if pokemon_id == 132:
                 pokemon[p.encounter_id]['rating_attack'] = 'A'
@@ -2621,6 +2622,10 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
                 pokemon[p.encounter_id]['move_1'] = 242
                 pokemon[p.encounter_id]['move_2'] = 133
                 pokemon_info = None
+
+            # Icon Auto Generation
+            if args.generate_images and args.pogo_assets:
+                generate_pokemon_images(p, pokemon_info, scout_result, worldtime, pokemon_id, previous_id)
 
             if 'pokemon' in args.wh_types:
                 if (not args.webhook_whitelist
@@ -3015,18 +3020,23 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
     }
 
 
-def generate_pokemon_images(p, worldtime):
+def generate_pokemon_images(p, pokemon_info, scout_result, worldtime, pokemon_id, previous_id):
     # (Icons Can Be Dynamically Used For Webhook Alerts,
     # If Generated Before The Alert.)
     # Convert A Bunch Of Stuff To Work With Dynimg.py
-    icnpkm = p.pokemon_data.pokemon_id
-    icngender = p.pokemon_data.pokemon_display.gender if p.pokemon_data.pokemon_display.gender else None
+    icnpkm = pokemon_id
+    icngender = None
+    if scout_result and scout_result['success']:
+        icngender = scout_result['gender'] if scout_result['gender'] else None
+    elif pokemon_info:
+        icngender = pokemon_info.gender if pokemon_info.gender else None
     icnform = p.pokemon_data.pokemon_display.form if p.pokemon_data.pokemon_display.form else None
     icncostume = p.pokemon_data.pokemon_display.costume if p.pokemon_data.pokemon_display.costume else None
     icnweather = p.pokemon_data.pokemon_display.weather_boosted_condition if p.pokemon_data.pokemon_display.weather_boosted_condition else 0
+    icnprevious = previous_id if previous_id else None
     icntime = worldtime if worldtime else 0
-    log.debug("%s - %s - %s - %s - %s - %s", icnpkm, icntime, icngender, icnform, icncostume, icnweather)
-    get_pokemon_map_icon(icnpkm, icntime, gender=icngender, form=icnform, costume=icncostume, weather=icnweather)
+    log.debug("generate_pokemon_images: %s - %s - %s - %s - %s - %s - %s", icnpkm, icntime, icngender, icnform, icncostume, icnweather, icnprevious)
+    get_pokemon_map_icon(icnpkm, icntime, gender=icngender, form=icnform, costume=icncostume, weather=icnweather, previous_id=icnprevious)
 
 
 def generate_gym_images(f):

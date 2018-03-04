@@ -1196,13 +1196,18 @@ function getPokemonIcon(item, sprite, displayHeight) {
     var scaledIconSize = new google.maps.Size(scale * sprite.iconWidth, scale * sprite.iconHeight)
     var scaledIconOffset = new google.maps.Point(0, 0)
     var scaledIconCenterOffset = new google.maps.Point(scale * sprite.iconWidth / 2, scale * sprite.iconHeight / 2)
-
+    let medal_param = ''
+    if ((item['pokemon_id'] === 19 && item['weight'] < 2.41) ||
+          (item['pokemon_id'] === 129 && item['weight'] >= 13.13)) {
+      medal_param = `&medal=True`
+    }
     let gender_param = item['gender'] ? `&gender=${item['gender']}` : ''
     let form_param = item['form'] ? `&form=${item['form']}` : ''
     let costume_param = item['costume_id'] ? `&costume=${item['costume_id']}` : ''
     let weather_param = item['weather_id'] ? `&weather=${item['weather_id']}` : ''
     let time_param = item['time_id'] ? `&time=${item['time_id']}` : ''
-    let icon_url = `pkm_img?pkm=${item['pokemon_id']}${gender_param}${form_param}${costume_param}${weather_param}${time_param}`
+    let previous_param = item['previous_id'] ? `&previous=${item['previous_id']}` : ''
+    let icon_url = `pkm_img?pkm=${item['pokemon_id']}${medal_param}${gender_param}${form_param}${costume_param}${weather_param}${time_param}${previous_param}`
 
     return {
         url: icon_url,
@@ -1233,13 +1238,19 @@ function getGoogleSprite(index, sprite, displayHeight) {
     }
 }
 
-function getPokemonIconImg (id, gender, form, costume_id, weather_id, time_id) {
+function getPokemonIconImg(id, weight, height, gender, form, costume_id, weather_id, time_id, previous_id) {
+    let medal_param = ''
+    if ((id === 19 && weight < 2.41) ||
+          (id === 129 && weight >= 13.13)) {
+      medal_param = `&medal=True`
+    }
     let gender_param = gender ? `&gender=${gender}` : ''
     let form_param = form ? `&form=${form}` : ''
     let costume_param = costume_id ? `&costume=${costume_id}` : ''
     let weather_param = weather_id ? `&weather=${weather_id}` : ''
     let time_param = time_id ? `&time=${time_id}` : ''
-    let icon_url = `pkm_img?pkm=${id}${gender_param}${form_param}${costume_param}${weather_param}${time_param}`
+    let previous_param = previous_id ? `&previous=${previous_id}` : ''
+    let icon_url = `pkm_img?pkm=${id}${medal_param}${gender_param}${form_param}${costume_param}${weather_param}${time_param}${previous_param}`
 
     return icon_url
 }
@@ -1253,6 +1264,21 @@ function pokemonIcon(pokemonId, pokemonForm = 0) {
     }
 
     return `static/sprites/${id}.png`
+}
+
+function get_pokemon_raw_icon_url(p) {
+    if (!generateImages) {
+        return `static/sprites/${p.pokemon_id}.png`
+    }
+    var url = 'pkm_img?raw=1&pkm=' + p.pokemon_id
+    var props = ['gender', 'form', 'costume', 'shiny']
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i]
+        if (prop in p && p[prop] != null && p[prop]) {
+            url += '&' + prop + '=' + p[prop]
+        }
+    }
+    return url
 }
 
 function pokemonSprite(pokemonId, pokemonForm = 0, useLargeSprite = false) {
@@ -1270,10 +1296,10 @@ function pokemonSprite(pokemonId, pokemonForm = 0, useLargeSprite = false) {
 function pokemonMarkerSprite(item, pokemonId, pokemonForm = 0, height) {
     const id = parseInt(pokemonId)
     const form = parseInt(pokemonForm)
-    if (isMedalPokemonMap(item)) {
-      return getGoogleSprite(id - 1, pokemonMedalSprites, height)
-    } else if (generateImages) {
+    if (generateImages) {
       return getPokemonIcon(item, pokemonSprites, height)
+    } else if (isMedalPokemonMap(item)) {
+      return getGoogleSprite(id - 1, pokemonMedalSprites, height)
     }	else if (id === 201 && form > 0) {
       return getGoogleSprite(form - 1, pokemonFormSprites, height)
     } else  {
@@ -1405,19 +1431,4 @@ function cssPercentageCircle(text, value, perfect_val, good_val, ok_val, meh_val
                     <span class="prec" id="prec">${text}</span>
                 </div>
             </div>`
-}
-
-function get_pokemon_raw_icon_url(p) {
-    if (!generateImages) {
-        return `static/sprites/${p.pokemon_id}.png`
-    }
-    var url = 'pkm_img?raw=1&pkm=' + p.pokemon_id
-    var props = ['gender', 'form', 'costume', 'shiny']
-    for (var i = 0; i < props.length; i++) {
-        var prop = props[i]
-        if (prop in p && p[prop] != null && p[prop]) {
-            url += '&' + prop + '=' + p[prop]
-        }
-    }
-    return url
 }

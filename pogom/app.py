@@ -160,17 +160,19 @@ class Pogom(Flask):
     def pokemon_img(self):
         raw = 'raw' in request.args
         pkm = int(request.args.get('pkm'))
+        medal = request.args.get('medal') if 'medal' in request.args else None
         gender = int(request.args.get('gender')) if 'gender' in request.args else None
         form = int(request.args.get('form')) if 'form' in request.args else None
         costume = int(request.args.get('costume')) if 'costume' in request.args else None
         weather = int(request.args.get('weather')) if 'weather' in request.args else 0
         time = int(request.args.get('time')) if 'time' in request.args else 0
         shiny = 'shiny' in request.args
+        previous_id = int(request.args.get('previous')) if 'previous' in request.args else None
         if raw:
-            filename = get_pokemon_raw_icon(pkm, time, gender=gender, form=form, costume=costume, weather=weather,
-                                            shiny=shiny)
+            filename = get_pokemon_raw_icon(pkm, time, medal=medal, gender=gender, form=form, costume=costume, weather=weather,
+                                            shiny=shiny, previous_id=previous_id)
         else:
-            filename = get_pokemon_map_icon(pkm, time, gender=gender, form=form, costume=costume, weather=weather)
+            filename = get_pokemon_map_icon(pkm, time, medal=medal, gender=gender, form=form, costume=costume, weather=weather, previous_id=previous_id)
         return send_file(filename, mimetype='image/png')
 
 
@@ -260,7 +262,6 @@ class Pogom(Flask):
                 'catch_prob_3': response['catch_prob_3'],
                 'rating_attack': response['rating_attack'],
                 'rating_defense': response['rating_defense'],
-                'previous_id': response.get('previous_id', None),
                 'weather_id': response.get('weather_id', None)
             }
         }

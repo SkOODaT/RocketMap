@@ -27,6 +27,8 @@ static/images/gym/*.png
 static/images/pokestop/*.png
 static/images/raid/*.png
 static/images/sex/*.png
+static/images/medal/*.png
+static/images/badge/*.png
 static/images/weather/*.png
 static/images/cluster/*.png
 static/icons-sprite.png

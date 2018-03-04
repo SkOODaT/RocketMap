@@ -25,6 +25,7 @@ path_images = os.path.join(path_static, 'images')
 path_gym = os.path.join(path_images, 'gym')
 path_raid = os.path.join(path_images, 'raid')
 path_weather = os.path.join(path_images, 'weather')
+path_medal = os.path.join(path_images, 'medal')
 path_sex = os.path.join(path_images, 'sex')
 path_generated = os.path.join(path_images, 'generated')
 path_generated_gym = os.path.join(path_generated, 'gym')
@@ -55,6 +56,11 @@ weather_images = {
     FOG:            os.path.join(path_weather, 'weather_fog.png'),
     11:             os.path.join(path_weather, 'weather_clear_night.png'),
     13:             os.path.join(path_weather, 'weather_partlycloudy_night.png')
+}
+
+medal_images = {
+    19:          os.path.join(path_medal, 'tiny_rattata.png'),
+    129:          os.path.join(path_medal, 'big_magikarp.png')
 }
 
 pkm_sizes = {
@@ -98,25 +104,35 @@ font = os.path.join(path_static, 'SF Intellivised.ttf')
 font_pointsize = 25
 
 
-def get_pokemon_raw_icon(pkm, time, gender=None, form=None, costume=None, weather=None, shiny=False):
+def get_pokemon_raw_icon(pkm, time, medal=None, gender=None, form=None, costume=None, weather=None, shiny=False, previous_id=None):
     if generate_images and pogo_assets:
-        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='icon', gender=gender, form=form, costume=costume, weather=weather, shiny=shiny)
+        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='icon', medal=medal, gender=gender, form=form, costume=costume, weather=weather, shiny=shiny, previous_id=previous_id)
         im_lines = ['-fuzz 0.5% -trim +repage'
                     ' -scale "96x96>" -unsharp 0x1'
                     ' -background none -gravity center -extent 96x96'
                     ]
+        if medal:
+            radius = 12
+            x = target_size - radius - 2
+            y = radius + 65
+            y2 = 65
+            im_lines.append(
+                '-gravity east'
+                ' -fill "#FFFD" -stroke black -draw "circle {x},{y} {x},{y2}"'
+                ' -draw "image over 6,29 15,15 \'{medal_img}\'"'.format(x=x, y=y, y2=y2, medal_img=medal_images[pkm])
+            )
         return run_imagemagick(source, im_lines, target)
     else:
         return os.path.join(path_icons, '{}.png'.format(pkm))
 
 
-def get_pokemon_map_icon(pkm, time, weather=None, gender=None, form=None, costume=None):
+def get_pokemon_map_icon(pkm, time, weather=None, medal=None, gender=None, form=None, costume=None, previous_id=None):
     im_lines = []
 
     # Add Pokemon icon
     if pogo_assets:
-        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='marker', gender=gender, form=form, costume=costume,
-                                            weather=weather)
+        source, target = pokemon_asset_path_shuffle(pkm, time, classifier='marker', medal=medal, gender=gender, form=form, costume=costume,
+                                            weather=weather, previous_id=previous_id)
         target_size = 96
         im_lines.append(
             #' -fuzz 0.5% -trim +repage'
@@ -180,6 +196,28 @@ def get_pokemon_map_icon(pkm, time, weather=None, gender=None, form=None, costum
                 ' -fill "#FFFD" -stroke black -draw "circle {x},{y} {x},{y2}"'
                 ' -draw "image over 1,1 42,42 \'{weather_img}\'"'.format(x=x, y=y, y2=y2, weather_img=weather_images[weather])
             )
+
+    if medal:
+        radius = 12
+        x = target_size - radius - 2
+        y = radius + 65
+        y2 = 65
+        im_lines.append(
+            '-gravity east'
+            ' -fill "#FFFD" -stroke black -draw "circle {x},{y} {x},{y2}"'
+            ' -draw "image over 6,29 15,15 \'{medal_img}\'"'.format(x=x, y=y, y2=y2, medal_img=medal_images[pkm])
+        )
+
+    if previous_id:
+        radius = 12
+        x = target_size - radius - 2
+        y = radius + 65
+        y2 = 65
+        im_lines.append(
+            '-gravity east'
+            ' -fill "#FFFD" -stroke black -draw "circle {x},{y} {x},{y2}"'
+            ' -draw "image over 3,29 22,22 \'{previous_img}\'"'.format(x=x, y=y, y2=y2, previous_img=path_icons + '\{previous_id}.png'.format(previous_id=str(previous_id)))
+        )
 
     return run_imagemagick(source, im_lines, target)
 
@@ -345,13 +383,15 @@ def pokemon_asset_path(pkm, time, classifier=None, gender=GENDER_UNSET, form=Non
                                   shiny=shiny)
 
 
-def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False):
+def pokemon_asset_path_shuffle(pkm, time, classifier=None, medal=None, gender=GENDER_UNSET, form=None, costume=None, weather=None, shiny=False, previous_id=None):
+    medal_suffix = ''
     gender_suffix = gender_assets_suffix = ''
     form_suffix = form_assets_suffix  = ''
     costume_suffix = costume_assets_suffix = ''
     weather_suffix = '_{}'.format(WeatherCondition.Name(weather)) if weather else ''
     shiny_suffix = '_shiny' if shiny else ''
     time_suffix = '_{}'.format(GetMapObjectsResponse.TimeOfDay.Name(time)) if time else ''
+    previous_id_suffix = ''
 
     # Genderless For Ditto, Should Be Proper Anyway...
     if gender in (GENDERLESS, MALE, FEMALE):
@@ -362,7 +402,8 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
 
     if form and pkm == 201:
         # Unown = no gender
-        gender_suffix = gender_assets_suffix = ''
+        if gender:
+            gender_suffix = gender_assets_suffix = ''
         form_assets_suffix = '_{:02d}'.format(form + 10)
         form_suffix = '_{}'.format(Form.Name(form))
 
@@ -379,6 +420,13 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
         costume_assets_suffix = '_{:02d}'.format(costume)
         costume_suffix = '_{}'.format(Costume.Name(costume))
 
+    if medal:
+        medal_suffix = '_MEDAL'
+
+    if pkm == 132:
+        if previous_id:
+            previous_id_suffix = '_{}'.format(previous_id)
+
     if not gender_assets_suffix and not form_assets_suffix and not costume_assets_suffix:
         gender_assets_suffix = '_16' if pkm == 201 else '' if pkm > 0 else ''
 
@@ -389,8 +437,8 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
     target_path = os.path.join(path_generated, 'pokemon_{}'.format(classifier)) if classifier else os.path.join(
         path_generated, 'pokemon')
     target_name = os.path.join(target_path,
-                               "pkm_{:03d}{}{}{}{}{}{}.png".format(pkm, gender_suffix, form_suffix, costume_suffix,
-                                                               weather_suffix, shiny_suffix, time_suffix))
+                               "pkm_{:03d}{}{}{}{}{}{}{}{}.png".format(pkm, medal_suffix, gender_suffix, form_suffix, costume_suffix,
+                                                               weather_suffix, shiny_suffix, time_suffix, previous_id_suffix))
     if os.path.isfile(assets_fullname):
         return assets_fullname, target_name
     else:
@@ -398,8 +446,8 @@ def pokemon_asset_path_shuffle(pkm, time, classifier=None, gender=GENDER_UNSET, 
             log.warning("Cannot find PogoAssets file {}".format(assets_fullname))
             # Dummy Pokemon icon
             return os.path.join(assets_basedir, 'pokemon_icon_000.png'), os.path.join(target_path, 'pkm_000.png')
-        return pokemon_asset_path_shuffle(pkm, time, classifier=classifier, gender=MALE, form=form, costume=costume, weather=weather,
-                                  shiny=shiny)
+        return pokemon_asset_path_shuffle(pkm, time, classifier=classifier, medal=medal, gender=MALE, form=form, costume=costume, weather=weather,
+                                  shiny=shiny, previous_id=previous_id)
 
 
 def draw_gym_subject(image, size, gravity='north', trim=False):
