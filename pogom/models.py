@@ -3021,15 +3021,15 @@ def parse_map(args, map_dict, scan_coords, scan_location, db_update_queue,
 
 
 def generate_pokemon_images(p, pokemon_info, scout_result, worldtime, pokemon_id, previous_id):
-    # (Icons Can Be Dynamically Used For Webhook Alerts,
-    # If Generated Before The Alert.)
+    # Icons Can Be Dynamically Used For Webhook Alerts,
+    # If Generated Before The Alert.
     # Convert A Bunch Of Stuff To Work With Dynimg.py
     icnpkm = pokemon_id
     icngender = None
     if scout_result and scout_result['success']:
         icngender = scout_result['gender'] if scout_result['gender'] else None
     elif pokemon_info:
-        icngender = pokemon_info.gender if pokemon_info.gender else None
+        icngender = pokemon_info.gender if pokemon_info.pokemon_data.gender else None
     icnform = p.pokemon_data.pokemon_display.form if p.pokemon_data.pokemon_display.form else None
     icncostume = p.pokemon_data.pokemon_display.costume if p.pokemon_data.pokemon_display.costume else None
     icnweather = p.pokemon_data.pokemon_display.weather_boosted_condition if p.pokemon_data.pokemon_display.weather_boosted_condition else 0
@@ -3040,8 +3040,8 @@ def generate_pokemon_images(p, pokemon_info, scout_result, worldtime, pokemon_id
 
 
 def generate_gym_images(f):
-    # (Icons Can Be Dynamically Used For Webhook Alerts,
-    # If Generated Before The Alert.)
+    # Icons Can Be Dynamically Used For Webhook Alerts,
+    # If Generated Before The Alert.
     # Convert A Bunch Of Stuff To Work With Dynimg.py
     pogoteams = {
         0: 'Uncontested',
