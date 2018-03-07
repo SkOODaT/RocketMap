@@ -41,7 +41,7 @@ def add_fake_pokemon(args, db_updates_queue, wh_update_queue,
             continue
 
         pokemon = {
-            'encounter_id': b64encode(str(fakeid)),
+            'encounter_id': fakeid,
             'spawnpoint_id': fakeidstr,
             'pokemon_id': None,
             'latitude': None,
@@ -57,7 +57,11 @@ def add_fake_pokemon(args, db_updates_queue, wh_update_queue,
             'weight': None,
             'gender': None,
             'form': None,
+            'costume_id': None,
             'cp_multiplier': None,
+            'previous_id': None,
+            'weather_id': None,
+            'time_id': None,
             }
 
         for key, value in obj.items():
